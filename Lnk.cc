@@ -50,7 +50,10 @@ void Lnk::handleMessage(cMessage *msg) {
             Packet* pkt = (Packet*) buffer.pop();
             bufferSizeVector.record(buffer.getLength());
             // send
-            send(pkt, "toOut$o");
+            cGate *gate = cModule::gate("toOut$o")->getNextGate();
+            if(gate->isConnectedOutside()){
+                send(pkt, "toOut$o");
+            }
             serviceTime = pkt->getDuration();
             scheduleAt(simTime() + serviceTime, endServiceEvent);
         }
