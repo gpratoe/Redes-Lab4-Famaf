@@ -7,7 +7,6 @@
 
 #include <PacketTable.cc>
 
-#define FAKE_INFINITY __INT_MAX__
 
 using namespace omnetpp;
 
@@ -15,8 +14,8 @@ class Net : public cSimpleModule
 {
 private:
     cMessage *tableEvent;
-    std::vector<int> distanceTable;
-    std::vector<int> interfaceByNode;
+    std::map<int,int> distanceTable;
+    std::map<int,int> interfaceByNode;
 
 public:
     Net();
@@ -27,8 +26,8 @@ protected:
     virtual void finish();
     virtual void handleMessage(cMessage *msg);
     virtual void updateTables(PacketTable *pkt);
-    virtual void sendTableToNeighbour(std::vector<int> distanceTable);
-    virtual std::string printTable(std::vector<int> table);
+    virtual void sendTableToNeighbour(std::map<int,int> distanceTable);
+    virtual std::string printTable(std::map<int,int> table);
 };
 
 Define_Module(Net);
@@ -41,13 +40,11 @@ Net::Net()
 
 Net::~Net()
 {
+    delete(tableEvent);
 }
 
 void Net::initialize()
 {
-
-    distanceTable.resize(this->getParentModule()->getVectorSize(), FAKE_INFINITY);
-    interfaceByNode.resize(this->getParentModule()->getVectorSize(), -1);
     distanceTable[this->getParentModule()->getIndex()] = 0;
     EV << printTable(distanceTable);
     tableEvent = new cMessage("tableEvent");
@@ -58,39 +55,34 @@ void Net::finish()
 {
 }
 
-void Net::sendTableToNeighbour(std::vector<int> distanceTable)
+void Net::sendTableToNeighbour(std::map<int,int> distanceTable)
 {
     
     for (unsigned int i = 0; i < gateSize("toLnk$o"); ++i)
     {
-        cGate* gate =  cModule::gate("toLnk$o",i);
-
         PacketTable *pkt = new PacketTable();
-        pkt->setKind(1);
+        pkt->setKind(-1);
         pkt->setDistanceTable(distanceTable);
-        pkt->setSize(distanceTable.size());
-        if(gate->isConnected()){
-            send(pkt, "toLnk$o", i);
-        }
+        send(pkt, "toLnk$o", i);
     }
 }
 
 void Net::updateTables(PacketTable *pkt)
 {
-    std::vector<int> tableArrived = pkt->getDistanceTable();
+    std::map<int,int> tableArrived = pkt->getDistanceTable();
     bool updated = false;
 
-    for (unsigned int i = 0; i < pkt->getSize(); i++)
+    for (std::map<int,int>::iterator it=tableArrived.begin(); it!=tableArrived.end(); ++it)
     {
 
-        if ((tableArrived[i] != FAKE_INFINITY) && (i != this->getParentModule()->getIndex()))
+        if (it->first != this->getParentModule()->getIndex())
         {
-            int newValue = tableArrived[i] + 1;
+            int newValue = tableArrived[it->first] + 1;
 
-            if (newValue < this->distanceTable[i])
+            if ((this->distanceTable.find(it->first) == this->distanceTable.end()) || newValue < this->distanceTable[it->first])
             {
-                this->distanceTable[i] = newValue;
-                this->interfaceByNode[i] = pkt->getArrivalGate()->getIndex();
+                this->distanceTable[it->first] = newValue;
+                this->interfaceByNode[it->first] = pkt->getArrivalGate()->getIndex();
                 updated = true;
             }
         }
@@ -101,12 +93,12 @@ void Net::updateTables(PacketTable *pkt)
     }
 }
 
-std::string Net::printTable(std::vector<int> table)
+std::string Net::printTable(std::map<int,int> table)
 {
     std::string ret = "nodo: " + std::to_string(this->getParentModule()->getIndex()) + "\n";
-    for (unsigned int i = 0; i < table.size(); i++)
+    for (std::map<int,int>::iterator it=table.begin(); it!=table.end(); ++it)
     {
-        ret += "[" + std::to_string(i) + "]: " + std::to_string(table[i]) + "\n";
+        ret += "[" + std::to_string(it->first) + "]: " + std::to_string(it->second) + "\n";
     }
     return ret;
 }
@@ -121,7 +113,7 @@ void Net::handleMessage(cMessage *msg)
     {
         sendTableToNeighbour(this->distanceTable);
     }
-    else if (pkt_t->getKind() == 1)
+    else if (pkt_t->getKind() == -1)
     {
         updateTables(pkt_t);
         EV << printTable(this->distanceTable);
@@ -141,6 +133,7 @@ void Net::handleMessage(cMessage *msg)
         // Is this the best choice? are there others?
 
         int interface = interfaceByNode[pkt->getDestination()];
+        pkt->setHopCount(pkt->getHopCount()+1);
         send(msg, "toLnk$o", interface);
     }
 }

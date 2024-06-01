@@ -8,27 +8,17 @@ using namespace omnetpp;
 
 class PacketTable: public cPacket{
 private:
-    std::vector<int> distanceTable;
-    int size;
+    std::map<int,int> distanceTable;
 public:
     PacketTable(){};
 
-     std::vector<int> getDistanceTable(){
+     std::map<int,int> getDistanceTable(){
         return this->distanceTable;
     };
     
-    void setDistanceTable( std::vector<int>distanceTable){
+    void setDistanceTable( std::map<int,int>distanceTable){
         this->distanceTable = distanceTable;
     };
-    
-    int getSize(){
-        return size;
-    };
-
-    void setSize(int size){
-        this->size = size;
-    }
-    
 };
 
 
