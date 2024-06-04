@@ -23,7 +23,7 @@ Internamente, cada nodo tiene dos capas de enlace (una con cada vecino), una cap
 
 ### Análisis con algoritmo inicial
 
- Con el primer algoritmo los paquetes se envían al vecino ubicado a la izquierda del nodo. Los paquetes se envían en dirección de las agujas del reloj. En esta implmentación, no se elige la ruta más "óptima" para enviar un paquete, se envían los paquetes sin un análisis o reconocimiento de las distancias entre todos los enrutadores que forman parte de nuestra red.
+ Con el primer algoritmo los paquetes se envían al vecino ubicado a la derecha del nodo. Los paquetes se envían en dirección de las agujas del reloj. En esta implmentación, no se elige la ruta más "óptima" para enviar un paquete, se envían los paquetes sin un análisis o reconocimiento de las distancias entre todos los enrutadores que forman parte de nuestra red.
 
 ### Caso 1:
 
@@ -85,7 +85,7 @@ Al recibir una tabla de enrutamiento de un vecino, un nodo actualiza su propia t
 
 ![Buffer anillo con mejora de algoritmo](img/Caso1BufferAnilloIMPLEMENTADO.png)
 
-El *node[0]* y el *node[2]* tienen distintos caminos óptimos hacia el *node[5]. Por lo tanto no  habrá ningún camino en común entre los paquetes generados por Nodo 0 y Nodo 2. Por lo tanto el máximo tamaño de buffer alcanzado por el algoritmo mejorado es mucho menor al tamaño de buffer alcanzado por el algoritmo inicial.
+El *node[0]* y el *node[2]* tienen distintos caminos óptimos hacia el *node[5]*. Por lo tanto no  habrá ningún camino en común entre los paquetes generados por Nodo 0 y Nodo 2. Por lo tanto el máximo tamaño de buffer alcanzado por el algoritmo mejorado es mucho menor al tamaño de buffer alcanzado por el algoritmo inicial.
 
 #### Delay de los paquetes
 
